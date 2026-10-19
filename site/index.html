@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Resistor Optimizer (web port)</title>
+<meta name="description" content="Browser port of Janne Ahonen's Resistor Optimizer: find optimal standard resistor values for voltage dividers and target resistances.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M1 16h7l2-6 4 12 4-12 4 12 2-6h7' fill='none' stroke='%23b4572e' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M1 16h7l2-6 4 12 4-12 4 12 2-6h7"/></svg>
+    <div>
+      <h1>Resistor Optimizer</h1>
+      <p class="credit">Web port of <a href="https://jahonen.kapsi.fi/Electronics/ResOptimizer/" target="_blank" rel="noopener">Resistor Optimizer v0.59</a> by <strong>Janne Ahonen</strong> (© JTA 2002–2025)</p>
+    </div>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="panel params" aria-label="Parameters">
+    <div class="tabs" role="tablist">
+      <button role="tab" id="tab-divider" aria-selected="true" aria-controls="page-divider">Resistor divider optimizer</button>
+      <button role="tab" id="tab-target" aria-selected="false" aria-controls="page-target">Target resistance optimizer</button>
+    </div>
+
+    <!-- Divider page -->
+    <form id="page-divider" class="page" role="tabpanel" aria-labelledby="tab-divider" autocomplete="off">
+      <div class="cols">
+        <div class="grid">
+          <label for="serFrom">Series resistance</label>
+          <div class="range">
+            <input id="serFrom" data-save value="1000"><span>to</span><input id="serTo" data-save value="100000">
+            <label class="chk"><input type="checkbox" id="serEn" data-save checked> Enabled</label>
+          </div>
+
+          <label for="parFrom">Parallel resistance</label>
+          <div class="range">
+            <input id="parFrom" data-save value="1000"><span>to</span><input id="parTo" data-save value="100000">
+            <label class="chk"><input type="checkbox" id="parEn" data-save> Enabled</label>
+          </div>
+
+          <label for="rSource">Source resistance</label>
+          <input id="rSource" data-save value="0">
+
+          <label for="rLoad">Load resistance</label>
+          <input id="rLoad" data-save value="0">
+
+          <label for="divFactor">Target division factor</label>
+          <input id="divFactor" data-save value="1.25/3.3">
+
+          <label for="divTol">Required tolerance</label>
+          <div class="with-hint"><input id="divTol" data-save value="0.05"><span class="hint">0.01 means 1%</span></div>
+
+          <label for="nUpper">Upper resistors</label>
+          <div class="pair">
+            <select id="nUpper" data-save><option>1</option><option>2</option><option>3</option><option>4</option></select>
+            <select id="cUpper" data-save><option value="par">parallel</option><option value="ser">series</option></select>
+          </div>
+
+          <label for="nLower">Lower resistors</label>
+          <div class="pair">
+            <select id="nLower" data-save><option>1</option><option selected>2</option><option>3</option><option>4</option></select>
+            <select id="cLower" data-save><option value="par">parallel</option><option value="ser">series</option></select>
+          </div>
+
+          <label for="divMax">Max number of results</label>
+          <input id="divMax" data-save value="10">
+        </div>
+
+        <div class="side">
+          <fieldset>
+            <legend>dB attenuator calculator</legend>
+            <div class="grid small">
+              <label for="attDb">Att/dB</label><input id="attDb" data-save value="12">
+            </div>
+            <button type="button" id="calcDb" class="secondary">Calculate division factor</button>
+          </fieldset>
+          <fieldset>
+            <legend>Voltage regulator calculator</legend>
+            <div class="grid small">
+              <label for="uOut">Uout</label><input id="uOut" data-save value="3.3">
+              <label for="uRef">Uref</label><input id="uRef" data-save value="1.25">
+              <label for="uGnd">UGND</label><input id="uGnd" data-save value="0">
+            </div>
+            <button type="button" id="calcReg" class="secondary">Calculate division factor</button>
+          </fieldset>
+          <figure class="schem" aria-label="Divider schematic">
+            <svg viewBox="0 0 230 156" role="img">
+              <title>Divider: Uin, Rsource, Ru, output node, Rl in parallel with Rload, ground</title>
+              <path class="wire" d="M12 20H30M58 20H128V34M128 62V94M128 122V136H170V122M128 80H170V94M170 80H199M149 136V142M139 142h20M143 146h12M147 150h4"/>
+              <rect class="part" x="30" y="13" width="28" height="14" rx="2"/>
+              <rect class="part" x="121" y="34" width="14" height="28" rx="2"/>
+              <rect class="part" x="121" y="94" width="14" height="28" rx="2"/>
+              <rect class="part opt" x="163" y="94" width="14" height="28" rx="2"/>
+              <circle class="dot" cx="128" cy="80" r="2.5"/><circle class="dot" cx="170" cy="80" r="2.5"/>
+              <circle class="term" cx="9" cy="20" r="3"/><circle class="term" cx="202" cy="80" r="3"/>
+              <text x="2" y="10">Uin</text><text x="22" y="42" class="dim">Rsource</text>
+              <text x="140" y="52">Ru</text><text x="106" y="112">Rl</text>
+              <text x="182" y="112" class="dim">Rload</text><text x="182" y="72">Uout</text>
+            </svg>
+          </figure>
+        </div>
+      </div>
+      <div class="actions">
+        <button type="submit" class="primary" id="goDivider">Optimize!</button>
+      </div>
+    </form>
+
+    <!-- Target page -->
+    <form id="page-target" class="page" role="tabpanel" aria-labelledby="tab-target" hidden autocomplete="off">
+      <div class="grid narrow">
+        <label for="tgtR">Target resistance</label>
+        <input id="tgtR" data-save value="3333">
+
+        <label for="tgtTol">Required tolerance</label>
+        <div class="with-hint"><input id="tgtTol" data-save value="0.01"><span class="hint">0.01 means 1%</span></div>
+
+        <label for="tgtN">Number of resistors</label>
+        <select id="tgtN" data-save><option>1</option><option selected>2</option><option>3</option><option>4</option></select>
+
+        <label for="tgtConn">Connection</label>
+        <select id="tgtConn" data-save>
+          <option value="par">Parallel only</option>
+          <option value="ser">Series only</option>
+          <option value="both">Parallel + series</option>
+        </select>
+
+        <label for="tgtMax">Max number of results</label>
+        <input id="tgtMax" data-save value="10">
+      </div>
+      <p class="note">Values accept SI prefixes and RKM codes, e.g. <code>4.7k</code>, <code>4k7</code>, <code>2M2</code>, <code>470R</code>.</p>
+      <div class="actions">
+        <button type="submit" class="primary" id="goTarget">Optimize!</button>
+      </div>
+    </form>
+  </section>
+
+  <aside class="panel values" aria-label="Available resistor values">
+    <h2>Available resistor values</h2>
+    <div class="vtools">
+      <button type="button" class="link" data-sel="all">All</button>
+      <button type="button" class="link" data-sel="none">None</button>
+      <button type="button" class="link" data-sel="invert">Invert</button>
+    </div>
+    <div id="valueList" class="vlist" role="group" aria-label="Resistor values"></div>
+    <p id="valueCount" class="muted"></p>
+    <div class="series-row">
+      <label for="seriesSel">Resistor series</label>
+      <select id="seriesSel"></select>
+    </div>
+    <label class="filebtn">Load .ser file…<input type="file" id="serFile" accept=".ser,.txt"></label>
+  </aside>
+
+  <section class="panel results" aria-label="Optimization results">
+    <div class="res-head">
+      <h2>Optimization results</h2>
+      <div id="summary" class="summary" aria-live="polite"></div>
+    </div>
+    <div class="status">
+      <div class="bar"><div id="barFill"></div></div>
+      <span id="statusText">Ready</span>
+    </div>
+    <div class="table-wrap">
+      <table id="resTable">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <p>
+    This is an unofficial browser re-implementation of <strong>Resistor Optimizer</strong>, originally written by
+    <strong>Janne Ahonen</strong> as a Win32/MFC application. All credit for the idea, the design of the tool and
+    the bundled resistor series (<code>.ser</code>) files goes to him — see the
+    <a href="https://jahonen.kapsi.fi/Electronics/ResOptimizer/" target="_blank" rel="noopener">original project page</a>
+    for the Windows version. Bugs in this port are the port's own, not the original's.
+  </p>
+  <p class="muted">Everything runs locally in your browser; nothing is uploaded.</p>
+</footer>
+
+<script src="series.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
